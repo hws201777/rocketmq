@@ -66,6 +66,13 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
         this.namesrvController = namesrvController;
     }
 
+    /**
+     * 处理 Broker 和客户端所有 RPC 请求
+     * @param ctx
+     * @param request
+     * @return
+     * @throws RemotingCommandException
+     */
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx,
         RemotingCommand request) throws RemotingCommandException {

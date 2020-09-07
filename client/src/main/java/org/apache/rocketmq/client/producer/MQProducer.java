@@ -25,6 +25,14 @@ import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 
+/**
+ * 单向发送（Oneway）：发送消息后立即返回，不处理响应，不关心是否发送成功；
+ * 同步发送（Sync）：发送消息后等待响应；
+ * 异步发送（Async）：发送消息后立即返回，在提供的回调方法中处理响应。
+ *
+ *
+ *
+ */
 public interface MQProducer extends MQAdmin {
     void start() throws MQClientException;
 

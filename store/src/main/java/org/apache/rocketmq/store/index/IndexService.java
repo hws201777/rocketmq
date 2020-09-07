@@ -199,6 +199,7 @@ public class IndexService {
     }
 
     public void buildIndex(DispatchRequest req) {
+        //获取一个IndexFile
         IndexFile indexFile = retryGetAndCreateIndexFile();
         if (indexFile != null) {
             long endPhyOffset = indexFile.getEndPhyOffset();

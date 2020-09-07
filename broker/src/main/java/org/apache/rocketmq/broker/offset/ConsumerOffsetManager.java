@@ -118,6 +118,7 @@ public class ConsumerOffsetManager extends ConfigManager {
         return groups;
     }
 
+    //提交消费进度
     public void commitOffset(final String clientHost, final String group, final String topic, final int queueId,
         final long offset) {
         // topic@group
@@ -125,6 +126,7 @@ public class ConsumerOffsetManager extends ConfigManager {
         this.commitOffset(clientHost, key, queueId, offset);
     }
 
+    //提交消费进度
     private void commitOffset(final String clientHost, final String key, final int queueId, final long offset) {
         ConcurrentMap<Integer, Long> map = this.offsetTable.get(key);
         if (null == map) {

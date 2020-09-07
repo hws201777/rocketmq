@@ -323,6 +323,7 @@ public class BrokerController {
                 }
             }, initialDelay, period, TimeUnit.MILLISECONDS);
 
+            //持久化消费队列进度
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {

@@ -192,17 +192,18 @@ public class MappedFileQueue {
     }
 
     public MappedFile getLastMappedFile(final long startOffset, boolean needCreate) {
-        long createOffset = -1;
+        long createOffset = -1; //创建文件开始offset,-1时,不创建
         MappedFile mappedFileLast = getLastMappedFile();
 
-        if (mappedFileLast == null) {
+        if (mappedFileLast == null) { //一个映射文件都不存在
+            //文件名
             createOffset = startOffset - (startOffset % this.mappedFileSize);
         }
 
-        if (mappedFileLast != null && mappedFileLast.isFull()) {
+        if (mappedFileLast != null && mappedFileLast.isFull()) { //最后一个文件满了
             createOffset = mappedFileLast.getFileFromOffset() + this.mappedFileSize;
         }
-
+        //创建文件
         if (createOffset != -1 && needCreate) {
             String nextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset);
             String nextNextFilePath = this.storePath + File.separator
@@ -214,6 +215,7 @@ public class MappedFileQueue {
                     nextNextFilePath, this.mappedFileSize);
             } else {
                 try {
+                    // todo getLastMappedFile 创建MappedFile
                     mappedFile = new MappedFile(nextFilePath, this.mappedFileSize);
                 } catch (IOException e) {
                     log.error("create mappedFile exception", e);
@@ -458,6 +460,9 @@ public class MappedFileQueue {
      * @param offset Offset.
      * @param returnFirstOnNotFound If the mapped file is not found, then return the first one.
      * @return Mapped file or null (when not found and returnFirstOnNotFound is <code>false</code>).
+     *
+     * 根据offset获取对应MappedFile, (offset - firstMappedFile.getFileFromOffset())/mappedFileSize  确定所在list的索引
+     *
      */
     public MappedFile findMappedFileByOffset(final long offset, final boolean returnFirstOnNotFound) {
         try {

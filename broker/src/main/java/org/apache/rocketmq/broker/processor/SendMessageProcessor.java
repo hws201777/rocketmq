@@ -61,29 +61,40 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         super(brokerController);
     }
 
+    /**
+     * 接受信息,写入信息到commitlog,并返回写入结果
+     * @param ctx
+     * @param request
+     * @return
+     * @throws RemotingCommandException
+     */
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx,
                                           RemotingCommand request) throws RemotingCommandException {
         SendMessageContext mqtraceContext;
         switch (request.getCode()) {
+            //当 Consumer 消费某条消息失败时，会调用该接口发回消息。Broker 会存储发回的消息。这样，下次 Consumer 拉取该消息，能够从 CommitLog 和 ConsumeQueue 顺序读取。
             case RequestCode.CONSUMER_SEND_MSG_BACK:
                 return this.consumerSendMsgBack(ctx, request);
             default:
+                //todo processRequest 解析请求 (主要解析extFields 到 SendMessageRequestHeader 类,各个字段做类型转换)
                 SendMessageRequestHeader requestHeader = parseRequestHeader(request);
                 if (requestHeader == null) {
                     return null;
                 }
-
+                // 发送请求Context。在 hook 场景下使用
                 mqtraceContext = buildMsgContext(ctx, requestHeader);
+                // hook：处理发送消息前逻辑
                 this.executeSendMessageHookBefore(ctx, request, mqtraceContext);
 
                 RemotingCommand response;
+                //todo processRequest 处理发送消息逻辑
                 if (requestHeader.isBatch()) {
                     response = this.sendBatchMessage(ctx, request, mqtraceContext, requestHeader);
                 } else {
                     response = this.sendMessage(ctx, request, mqtraceContext, requestHeader);
                 }
-
+                // hook：处理发送消息后逻辑
                 this.executeSendMessageHookAfter(response, mqtraceContext);
                 return response;
         }
@@ -292,11 +303,13 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         return true;
     }
 
+    // 发送消息，并返回发送消息结果。
     private RemotingCommand sendMessage(final ChannelHandlerContext ctx,
                                         final RemotingCommand request,
                                         final SendMessageContext sendMessageContext,
                                         final SendMessageRequestHeader requestHeader) throws RemotingCommandException {
 
+        // 初始化响应response (构造 RemotingCommand)
         final RemotingCommand response = RemotingCommand.createResponseCommand(SendMessageResponseHeader.class);
         final SendMessageResponseHeader responseHeader = (SendMessageResponseHeader)response.readCustomHeader();
 
@@ -307,6 +320,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
 
         log.debug("receive SendMessage request command, {}", request);
 
+        // 如果未开始接收消息，抛出系统异常
         final long startTimstamp = this.brokerController.getBrokerConfig().getStartAcceptSendRequestTimeStamp();
         if (this.brokerController.getMessageStore().now() < startTimstamp) {
             response.setCode(ResponseCode.SYSTEM_ERROR);
@@ -315,6 +329,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         }
 
         response.setCode(-1);
+        // 消息配置(Topic配置）校验
         super.msgCheck(ctx, requestHeader, response);
         if (response.getCode() != -1) {
             return response;
@@ -322,13 +337,16 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
 
         final byte[] body = request.getBody();
 
+        // 如果队列小于0，从可用队列随机选择
         int queueIdInt = requestHeader.getQueueId();
+        // todo 不想暴露对private topicConfigTable的操作,所以用的类似get方法获取对象
         TopicConfig topicConfig = this.brokerController.getTopicConfigManager().selectTopicConfig(requestHeader.getTopic());
 
         if (queueIdInt < 0) {
             queueIdInt = Math.abs(this.random.nextInt() % 99999999) % topicConfig.getWriteQueueNums();
         }
 
+        // 创建MessageExtBrokerInner
         MessageExtBrokerInner msgInner = new MessageExtBrokerInner();
         msgInner.setTopic(requestHeader.getTopic());
         msgInner.setQueueId(queueIdInt);
@@ -358,6 +376,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
             }
             putMessageResult = this.brokerController.getTransactionalMessageService().prepareMessage(msgInner);
         } else {
+            // todo sendMessage 添加消息,存储
             putMessageResult = this.brokerController.getMessageStore().putMessage(msgInner);
         }
 

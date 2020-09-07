@@ -98,6 +98,9 @@ public class MQClientInstance {
     private final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable = new ConcurrentHashMap<String, TopicRouteData>();
     private final Lock lockNamesrv = new ReentrantLock();
     private final Lock lockHeartbeat = new ReentrantLock();
+    /**
+     * Broker名字 和 Broker地址相关 Map
+     */
     private final ConcurrentMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
         new ConcurrentHashMap<String, HashMap<Long, String>>();
     private final ConcurrentMap<String/* Broker Name */, HashMap<String/* address */, Integer>> brokerVersionTable =
@@ -231,14 +234,19 @@ public class MQClientInstance {
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
                     // Start request-response channel
+                    //启动q请求响应通道//启动实例 mQClientAPIImpl，其中 mQClientAPIImpl 是类 MQClientAPIImpl 的实例，封装了客户端与 Broker 通信的方法；
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
+                    //启动各种定时任务//，包括与 Broker 之间的定时心跳，定时与 NameServer 同步数据等任务；
                     this.startScheduledTask();
                     // Start pull service
+                    //启动拉消息服务
                     this.pullMessageService.start();
                     // Start rebalance service
+                    //启动rebalance服务
                     this.rebalanceService.start();
                     // Start push service
+                    //启动Producer服务
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
                     log.info("the client factory [{}] start OK", this.clientId);
                     this.serviceState = ServiceState.RUNNING;
@@ -952,10 +960,13 @@ public class MQClientInstance {
     }
 
     public void doRebalance() {
+
+        //遍历当前 Client 包含的 consumerTable( Consumer集合 )，执行消息队列分配。
         for (Map.Entry<String, MQConsumerInner> entry : this.consumerTable.entrySet()) {
             MQConsumerInner impl = entry.getValue();
             if (impl != null) {
                 try {
+                    //todo doRebalance() 两个实现 pull | push
                     impl.doRebalance();
                 } catch (Throwable e) {
                     log.error("doRebalance exception", e);
@@ -968,6 +979,7 @@ public class MQClientInstance {
         return this.producerTable.get(group);
     }
 
+    //根据消费组获取MQConsumerInner
     public MQConsumerInner selectConsumer(final String group) {
         return this.consumerTable.get(group);
     }
@@ -1011,21 +1023,31 @@ public class MQClientInstance {
         return null;
     }
 
+    /**
+     * 获取broker信息
+     *
+     * @param brokerName 名字
+     * @param brokerId 编号
+     * @param onlyThisBroker 是否必须是该broker
+     * @return Broker信息
+     */
     public FindBrokerResult findBrokerAddressInSubscribe(
         final String brokerName,
         final long brokerId,
         final boolean onlyThisBroker
     ) {
-        String brokerAddr = null;
-        boolean slave = false;
-        boolean found = false;
+        String brokerAddr = null; //broker地址
+        boolean slave = false; //是否从节点
+        boolean found = false; //是否发现
 
+        // 获得Broker信息
         HashMap<Long/* brokerId */, String/* address */> map = this.brokerAddrTable.get(brokerName);
         if (map != null && !map.isEmpty()) {
             brokerAddr = map.get(brokerId);
             slave = brokerId != MixAll.MASTER_ID;
             found = brokerAddr != null;
 
+            // 如果不强制获得，选择一个Broker
             if (!found && !onlyThisBroker) {
                 Entry<Long, String> entry = map.entrySet().iterator().next();
                 brokerAddr = entry.getValue();
@@ -1034,6 +1056,7 @@ public class MQClientInstance {
             }
         }
 
+        //找到返回
         if (found) {
             return new FindBrokerResult(brokerAddr, slave, findBrokerVersion(brokerName, brokerAddr));
         }

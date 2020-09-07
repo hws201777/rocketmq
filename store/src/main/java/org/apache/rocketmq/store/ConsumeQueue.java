@@ -417,6 +417,7 @@ public class ConsumeQueue {
         this.defaultMessageStore.getRunningFlags().makeLogicsQueueError();
     }
 
+    //构建byteBufferIndex,put offset,size,tafsCode, 存储到mappedFile
     private boolean putMessagePositionInfo(final long offset, final int size, final long tagsCode,
         final long cqOffset) {
 
@@ -481,7 +482,7 @@ public class ConsumeQueue {
             mappedFile.appendMessage(byteBuffer.array());
         }
     }
-
+    //获取对应mappedFile,get信息
     public SelectMappedBufferResult getIndexBuffer(final long startIndex) {
         int mappedFileSize = this.mappedFileSize;
         long offset = startIndex * CQ_STORE_UNIT_SIZE;

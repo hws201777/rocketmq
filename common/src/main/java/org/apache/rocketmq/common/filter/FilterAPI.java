@@ -36,6 +36,7 @@ public class FilterAPI {
         return simple;
     }
 
+    // 根据 Topic 和 订阅表达式 创建订阅数据
     public static SubscriptionData buildSubscriptionData(final String consumerGroup, String topic,
         String subString) throws Exception {
         SubscriptionData subscriptionData = new SubscriptionData();

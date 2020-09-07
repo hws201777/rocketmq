@@ -198,17 +198,23 @@ public class MappedFile extends ReferenceResource {
         return appendMessagesInner(messageExtBatch, cb);
     }
 
+    /**
+     * 插入消息到 MappedFile，并返回插入结果。
+     * 只是写入字节缓冲区,并没有刷新到硬盘
+     */
     public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb) {
         assert messageExt != null;
         assert cb != null;
-
+        //当前位置 2210409
         int currentPos = this.wrotePosition.get();
 
+        //还没写满
         if (currentPos < this.fileSize) {
             ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();
             byteBuffer.position(currentPos);
             AppendMessageResult result = null;
             if (messageExt instanceof MessageExtBrokerInner) {
+                //todo appendMessagesInner 插入消息到字节缓冲区  0 , byteBuffer , 1071531415 ,MessageExtBrokerInner
                 result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBrokerInner) messageExt);
             } else if (messageExt instanceof MessageExtBatch) {
                 result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBatch) messageExt);
@@ -401,12 +407,15 @@ public class MappedFile extends ReferenceResource {
         return null;
     }
 
+    //根据pos获取bytebuffer信息
     public SelectMappedBufferResult selectMappedBuffer(int pos) {
         int readPosition = getReadPosition();
         if (pos < readPosition && pos >= 0) {
-            if (this.hold()) {
+            if (this.hold()) { //引用+1
+                //创建一个新的缓冲区,共用同一个数组,但是offset,limit,容量,limit等是隔离的
                 ByteBuffer byteBuffer = this.mappedByteBuffer.slice();
                 byteBuffer.position(pos);
+                //todo 待定 结束 - 开始
                 int size = readPosition - pos;
                 ByteBuffer byteBufferNew = byteBuffer.slice();
                 byteBufferNew.limit(size);
