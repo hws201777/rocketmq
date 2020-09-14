@@ -26,14 +26,15 @@ public class MessageFilterImpl implements MessageFilter {
     @Override
     public boolean match(MessageExt msg, FilterContext context) {
         String property = msg.getProperty("SequenceId");
-        if (property != null) {
-            int id = Integer.parseInt(property);
-            if (((id % 10) == 0) &&
-                (id > 100)) {
-                return true;
-            }
-        }
-
-        return false;
+//        if (property != null) {
+//            int id = Integer.parseInt(property);
+//            if (((id % 2) == 0) &&
+//                (id > 1)) {
+//                return true;
+//            }
+//        }
+//
+//        return false;
+        return true;
     }
 }

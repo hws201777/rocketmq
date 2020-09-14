@@ -147,6 +147,7 @@ public class BrokerOuterAPI {
                     @Override
                     public void run() {
                         try {
+                            // todo doRegister
                             RegisterBrokerResult result = registerBroker(namesrvAddr,oneway, timeoutMills,requestHeader,body);
                             if (result != null) {
                                 registerBrokerResultList.add(result);

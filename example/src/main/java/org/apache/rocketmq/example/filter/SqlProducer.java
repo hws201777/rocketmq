@@ -27,6 +27,8 @@ public class SqlProducer {
 
     public static void main(String[] args) {
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
+        producer.setNamesrvAddr("127.0.0.1:9876");
+
         try {
             producer.start();
         } catch (MQClientException e) {

@@ -39,6 +39,7 @@ public class SqlConsumer {
             e.printStackTrace();
             return;
         }
+        consumer.setNamesrvAddr("127.0.0.1:9876");
 
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 

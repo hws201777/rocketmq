@@ -406,7 +406,10 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
         return this.createChannel(addr);
     }
 
+    // 从 Namesrv列表选择一个可连接的进行通信  双重校验是否为空
     private Channel getAndCreateNameserverChannel() throws InterruptedException {
+
+        //// 返回已选择、可连接Namesrv
         String addr = this.namesrvAddrChoosed.get();
         if (addr != null) {
             ChannelWrapper cw = this.channelTables.get(addr);

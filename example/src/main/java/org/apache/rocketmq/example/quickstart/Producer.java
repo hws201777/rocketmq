@@ -51,16 +51,17 @@ public class Producer {
         producer.setNamesrvAddr("127.0.0.1:9876");
 
         producer.start();
+        String[] tags = {"TagA","TagB","TagC","TagD"};
 
         for (int i = 0; i < 1000; i++) {
             try {
-
+                String tag = tags[i % tags.length];
                 /*
                  * Create a message instance, specifying topic, tag and message body.
                  */
                 Message msg = new Message("TopicTest" /* Topic */,
-                    "TagA" /* Tag */,
-                    ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET) /* Message body */
+                        tag /* Tag */,
+                    ("Hello RocketMQ " +tag+ i).getBytes(RemotingHelper.DEFAULT_CHARSET) /* Message body */
                 );
 
                 /*

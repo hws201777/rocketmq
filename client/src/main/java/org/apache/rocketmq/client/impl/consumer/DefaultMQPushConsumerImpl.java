@@ -530,6 +530,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         log.info("resume this consumer, {}", this.defaultMQPushConsumer.getConsumerGroup());
     }
 
+    //发回消息
     public void sendMessageBack(MessageExt msg, int delayLevel, final String brokerName)
         throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
         try {
@@ -538,6 +539,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
             this.mQClientFactory.getMQClientAPIImpl().consumerSendMessageBack(brokerAddr, msg,
                 this.defaultMQPushConsumer.getConsumerGroup(), delayLevel, 5000, getMaxReconsumeTimes());
         } catch (Exception e) {
+            // 异常时，使用Client内置Producer发回消息
             log.error("sendMessageBack Exception, " + this.defaultMQPushConsumer.getConsumerGroup(), e);
 
             Message newMsg = new Message(MixAll.getRetryTopic(this.defaultMQPushConsumer.getConsumerGroup()), msg.getBody());
@@ -896,9 +898,11 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
     //订阅Topic
     public void subscribe(String topic, String subExpression) throws MQClientException {
         try {
-            //创建订阅数据
+            //创建订阅数据集subscriptionData对象
             SubscriptionData subscriptionData = FilterAPI.buildSubscriptionData(this.defaultMQPushConsumer.getConsumerGroup(),
                 topic, subExpression);
+
+            //存储到rebalanceImpl.getSubscriptionInner()  ConcurrentMap<String /* topic */, SubscriptionData>
             this.rebalanceImpl.getSubscriptionInner().put(topic, subscriptionData);
 
             // todo subscribe 通过心跳同步Consumer信息到Broker

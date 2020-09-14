@@ -22,6 +22,12 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.InternalLogger;
 import org.apache.rocketmq.logging.InternalLoggerFactory;
 
+/**
+ * 1.当处于stopped 状态的时候，不执行任何任务
+ * 2.当不处于stopped状态的时候，用户调用waitForRunning()可以启动一段定时器，并阻塞一段时间，或者
+ * 3.使用wakeup()立即结束跑完当前的定时器，立即退出阻塞状态
+ *
+ */
 public abstract class ServiceThread implements Runnable {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
@@ -29,6 +35,8 @@ public abstract class ServiceThread implements Runnable {
 
     protected final Thread thread;
     protected final CountDownLatch2 waitPoint = new CountDownLatch2(1);
+
+    //意味着waitPoint 即将减一
     protected volatile AtomicBoolean hasNotified = new AtomicBoolean(false);
 
     //volatile

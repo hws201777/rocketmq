@@ -50,6 +50,8 @@ public class PullMessageService extends ServiceThread {
         this.mQClientFactory = mQClientFactory;
     }
 
+    //===========================添加到队列等待执行=====================================
+
     /**
      * 执行延迟拉取消息请求
      * @param pullRequest
@@ -79,6 +81,8 @@ public class PullMessageService extends ServiceThread {
         }
     }
 
+
+
     /**
      * 执行延迟任务
      * @param r 任务
@@ -97,7 +101,7 @@ public class PullMessageService extends ServiceThread {
     }
 
     /**
-     * 拉取消息
+     * do 拉取消息
      * @param pullRequest
      */
     private void pullMessage(final PullRequest pullRequest) {
@@ -112,6 +116,7 @@ public class PullMessageService extends ServiceThread {
         }
     }
 
+    //===================================执行队列任务=========================================
     //循环拉取消息请求队列( pullRequestQueue )，进行消息拉取
     @Override
     public void run() {
